@@ -37,7 +37,7 @@ Before you begin, ensure you have met the following requirements:
     docker-compose up -d
     ```
 
-3. Access Portainer UI by navigating to `http://localhost:9000` in your web browser.
+3. Access Portainer UI by navigating to `http://localhost:9443` in your web browser.
 
 ## Usage
 
@@ -46,7 +46,7 @@ Before you begin, ensure you have met the following requirements:
 
 ## Configuration
 
-- The default configuration can be modified in the `docker-compose.yml` file.
+- The default configuration can be modified in the `docker-compose.yaml` file.
 - You can change the exposed ports, volume mounts, and other settings as needed.
 
 ## Contributing
@@ -62,4 +62,4 @@ Contributions are always welcome! Please follow these steps to contribute to the
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the BSD License - see the [LICENSE](LICENSE) file for details.
