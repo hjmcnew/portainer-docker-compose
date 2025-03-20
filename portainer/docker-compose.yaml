@@ -4,7 +4,7 @@ include:
   - portainer-agent/docker-compose.yaml
 services:
   portainer:
-    image: portainer/portainer-ee:2.27.1-alpine
+    image: portainer/portainer-ee:2.27.2-alpine
     container_name: portainer
     volumes:
       - /home/herb/portainer/data:/data
