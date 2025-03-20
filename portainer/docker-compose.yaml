@@ -1,0 +1,13 @@
+---
+name: portainer
+include:
+  - portainer-agent/docker-compose.yaml
+services:
+  portainer:
+    image: portainer/portainer-ee:2.27.1-alpine
+    container_name: portainer
+    volumes:
+      - /home/herb/portainer/data:/data
+    ports:
+      - '0.0.0.0:9443:9443'
+    restart: unless-stopped
