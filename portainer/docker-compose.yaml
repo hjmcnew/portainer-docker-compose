@@ -9,5 +9,5 @@ services:
     volumes:
       - ../data:/data
     ports:
-      - '9443:9443'
+      - '0.0.0.0:9443:9443'
     restart: unless-stopped
