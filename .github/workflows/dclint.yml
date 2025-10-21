@@ -15,6 +15,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Setup node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
       - run: npm install dclint
       - run: npx dclint */docker-compose.yaml
