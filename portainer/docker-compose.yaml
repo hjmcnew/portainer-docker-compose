@@ -6,7 +6,20 @@ services:
   certbot:
     image: certbot/dns-route53:5.4.0
     container_name: certbot
-    entrypoint: /opt/certbot/entrypoint.sh
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        if [ ! -f /etc/letsencrypt/live/${DOMAIN}/fullchain.pem ]; then
+          certbot certonly \
+            --dns-route53 \
+            --non-interactive \
+            --agree-tos \
+            --email ${EMAIL} \
+            -d ${DOMAIN} \
+            --key-type ecdsa
+        fi
+        sleep infinity
     environment:
       - DOMAIN=${DOMAIN}
       - EMAIL=${EMAIL}
@@ -14,8 +27,6 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     volumes:
       - letsencrypt:/etc/letsencrypt
-      - ./certbot-entrypoint.sh:/opt/certbot/entrypoint.sh:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
     healthcheck:
       test:
         - CMD-SHELL
@@ -24,6 +35,26 @@ services:
       timeout: 5s
       retries: 30
       start_period: 120s
+    labels:
+      ofelia.job-exec.certbot-renew.schedule: '0 0 */12 * * *'
+      ofelia.job-exec.certbot-renew.command: 'certbot renew'
+    restart: unless-stopped
+
+  ofelia:
+    image: mcuadros/ofelia:latest
+    container_name: ofelia
+    command: daemon --docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      ofelia.job-run.restart-portainer.schedule: '0 5 */12 * * *'
+      ofelia.job-run.restart-portainer.image: 'docker:cli'
+      ofelia.job-run.restart-portainer.command: 'docker restart portainer'
+      ofelia.job-run.restart-portainer.volume: '/var/run/docker.sock:/var/run/docker.sock'
+      ofelia.job-run.restart-portainer.delete: 'true'
+    depends_on:
+      certbot:
+        condition: service_healthy
     restart: unless-stopped
 
   portainer:
