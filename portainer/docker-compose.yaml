@@ -6,7 +6,13 @@ services:
   certbot:
     image: certbot/dns-route53:5.4.0
     container_name: certbot
-    entrypoint: /bin/sh
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+    environment:
+      - DOMAIN=${DOMAIN}
+      - EMAIL=${EMAIL}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     command:
       - -c
       - |
@@ -20,13 +26,8 @@ services:
             --key-type ecdsa
         fi
         sleep infinity
-    environment:
-      - DOMAIN=${DOMAIN}
-      - EMAIL=${EMAIL}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-    volumes:
-      - letsencrypt:/etc/letsencrypt
+    entrypoint: /bin/sh
+    restart: unless-stopped
     healthcheck:
       test:
         - CMD-SHELL
@@ -38,14 +39,17 @@ services:
     labels:
       ofelia.job-exec.certbot-renew.schedule: '0 23 0 * * 1'
       ofelia.job-exec.certbot-renew.command: 'certbot renew --deploy-hook "touch /etc/letsencrypt/.renewed"'
-    restart: unless-stopped
 
   ofelia:
-    image: mcuadros/ofelia:latest
+    image: mcuadros/ofelia:0.3.21
     container_name: ofelia
-    command: daemon --docker
+    depends_on:
+      certbot:
+        condition: service_healthy
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: daemon --docker
+    restart: unless-stopped
     labels:
       ofelia.job-run.restart-portainer.schedule: '0 28 0 * * 1'
       ofelia.job-run.restart-portainer.image: 'docker:cli'
@@ -56,27 +60,23 @@ services:
         || true"
       ofelia.job-run.restart-portainer.volume: '/var/run/docker.sock:/var/run/docker.sock'
       ofelia.job-run.restart-portainer.delete: 'true'
-    depends_on:
-      certbot:
-        condition: service_healthy
-    restart: unless-stopped
 
   portainer:
     image: portainer/portainer-ee:2.39.0-alpine
     container_name: portainer
-    command:
-      - --sslcert
-      - /certs/live/${DOMAIN}/fullchain.pem
-      - --sslkey
-      - /certs/live/${DOMAIN}/privkey.pem
+    depends_on:
+      certbot:
+        condition: service_healthy
     volumes:
       - ../data:/data
       - letsencrypt:/certs:ro
     ports:
       - '0.0.0.0:9443:9443'
-    depends_on:
-      certbot:
-        condition: service_healthy
+    command:
+      - --sslcert
+      - /certs/live/${DOMAIN}/fullchain.pem
+      - --sslkey
+      - /certs/live/${DOMAIN}/privkey.pem
     restart: unless-stopped
 
 volumes:
