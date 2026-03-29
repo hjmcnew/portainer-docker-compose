@@ -36,7 +36,7 @@ services:
       retries: 30
       start_period: 120s
     labels:
-      ofelia.job-exec.certbot-renew.schedule: '0 0 */12 * * *'
+      ofelia.job-exec.certbot-renew.schedule: '0 0 0 * * 1'
       ofelia.job-exec.certbot-renew.command: 'certbot renew --deploy-hook "touch /etc/letsencrypt/.renewed"'
     restart: unless-stopped
 
@@ -47,7 +47,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
-      ofelia.job-run.restart-portainer.schedule: '0 5 */12 * * *'
+      ofelia.job-run.restart-portainer.schedule: '0 5 0 * * 1'
       ofelia.job-run.restart-portainer.image: 'docker:cli'
       ofelia.job-run.restart-portainer.command: >-
         sh -c "docker exec certbot test -f /etc/letsencrypt/.renewed
