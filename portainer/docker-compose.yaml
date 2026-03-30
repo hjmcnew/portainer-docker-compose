@@ -4,7 +4,7 @@ include:
   - ../portainer-agent/docker-compose.yaml
 services:
   certbot:
-    image: certbot/dns-route53:5.4.0
+    image: certbot/dns-route53:v5.4.0
     container_name: certbot
     volumes:
       - letsencrypt:/etc/letsencrypt
