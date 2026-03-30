@@ -1,28 +1,39 @@
 # Portainer Docker Compose
 
-This repository provides a simple setup to deploy Portainer using Docker Compose. Portainer is a lightweight management UI that allows you to easily manage your Docker environments.
+Docker Compose configurations for deploying [Portainer EE](https://www.portainer.io/) with automated Let's Encrypt SSL certificates via DNS-01 challenge (Route53).
 
-## Table of Contents
+## Repository Structure
 
-- [Getting Started](#getting-started)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Configuration](#configuration)
-- [Contributing](#contributing)
-- [License](#license)
+```
+portainer/             # Portainer EE server with SSL and cert automation
+  docker-compose.yaml
+portainer-agent/       # Standalone Portainer Agent for remote endpoints
+  docker-compose.yaml
+```
+
+## Components
+
+### Portainer Server (`portainer/`)
+
+The main compose file deploys three services:
+
+- **Portainer EE** — management UI served over TLS on port `9443`
+- **Certbot** — obtains and stores Let's Encrypt certificates using the `dns-route53` plugin
+- **Ofelia** — cron scheduler that renews certificates weekly and restarts Portainer when certs are updated
+
+The Portainer Agent is included via compose `include` from `portainer-agent/docker-compose.yaml`.
+
+### Portainer Agent (`portainer-agent/`)
+
+A standalone Portainer Agent deployment on port `9001`, suitable for adding remote Docker endpoints to your Portainer instance.
+
+## Prerequisites
+
+- Docker Engine with Compose V2 (`docker compose`)
+- An AWS Route53-hosted domain (for DNS-01 certificate validation)
+- AWS credentials with Route53 permissions
 
 ## Getting Started
-
-These instructions will help you get a copy of the project up and running on your local machine for development and testing purposes.
-
-### Prerequisites
-
-Before you begin, ensure you have met the following requirements:
-- Docker installed on your machine. You can download Docker from [here](https://www.docker.com/products/docker-desktop).
-- Docker Compose installed. You can follow the instructions [here](https://docs.docker.com/compose/install/).
-
-## Installation
 
 1. Clone the repository:
 
@@ -31,27 +42,50 @@ Before you begin, ensure you have met the following requirements:
     cd portainer-docker-compose
     ```
 
-2. Start the Portainer service using Docker Compose:
+2. Create a `.env` file in the `portainer/` directory with your configuration:
 
-    ```sh
-    docker-compose up -d
+    ```env
+    DOMAIN=portainer.example.com
+    EMAIL=you@example.com
+    AWS_ACCESS_KEY_ID=your-key-id
+    AWS_SECRET_ACCESS_KEY=your-secret-key
     ```
 
-3. Access Portainer UI by navigating to `http://localhost:9443` in your web browser.
+3. Start the stack:
 
-## Usage
+    ```sh
+    cd portainer
+    docker compose up -d
+    ```
 
-- Once Portainer is running, you can log in and start managing your Docker environments.
-- You can add multiple Docker endpoints and manage them from a single interface.
+    Certbot will obtain a certificate on first run. The healthcheck waits for the cert to be issued before Portainer starts.
 
-## Configuration
+4. Access Portainer at `https://your-domain:9443`.
 
-- The default configuration can be modified in the `docker-compose.yaml` file.
-- You can change the exposed ports, volume mounts, and other settings as needed.
+### Deploying Only the Agent
+
+To deploy just the Portainer Agent on a remote host:
+
+```sh
+cd portainer-agent
+docker compose up -d
+```
+
+## Certificate Renewal
+
+Ofelia handles automated renewal on a weekly schedule:
+
+1. Certbot attempts renewal and sets a flag file if the certificate was updated
+2. A follow-up job checks for the flag, restarts Portainer to load the new cert, and clears the flag
+
+No manual intervention is required.
+
+## CI
+
+- **Docker Compose Lint** — validates compose files on push and PRs using [dclint](https://github.com/zavoloklom/docker-compose-linter)
+- **Dependabot** — monitors for Docker image and GitHub Actions updates weekly (major version bumps are ignored for Docker images)
 
 ## Contributing
-
-Contributions are always welcome! Please follow these steps to contribute to the project:
 
 1. Fork the repository.
 2. Create a new branch (`git checkout -b feature/your-feature-name`).
@@ -62,4 +96,4 @@ Contributions are always welcome! Please follow these steps to contribute to the
 
 ## License
 
-This project is licensed under the BSD License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the BSD 3-Clause License — see the [LICENSE](LICENSE) file for details.
