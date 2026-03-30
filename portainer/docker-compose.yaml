@@ -41,7 +41,7 @@ services:
       retries: 30
       start_period: 120s
     labels:
-      ofelia.job-exec.certbot-renew.schedule: '0 23 0 * * 1'
+      ofelia.job-exec.certbot-renew.schedule: "0 23 0 * * 1"
       ofelia.job-exec.certbot-renew.command: 'certbot renew --deploy-hook "touch /etc/letsencrypt/.renewed"'
 
   ofelia:
@@ -59,15 +59,15 @@ services:
     cap_drop:
       - ALL
     labels:
-      ofelia.job-run.restart-portainer.schedule: '0 28 0 * * 1'
-      ofelia.job-run.restart-portainer.image: 'docker:cli'
+      ofelia.job-run.restart-portainer.schedule: "0 28 0 * * 1"
+      ofelia.job-run.restart-portainer.image: "docker:cli"
       ofelia.job-run.restart-portainer.command: >-
         sh -c "docker exec certbot test -f /etc/letsencrypt/.renewed
         && docker restart portainer
         && docker exec certbot rm /etc/letsencrypt/.renewed
         || true"
-      ofelia.job-run.restart-portainer.volume: '/var/run/docker.sock:/var/run/docker.sock'
-      ofelia.job-run.restart-portainer.delete: 'true'
+      ofelia.job-run.restart-portainer.volume: "/var/run/docker.sock:/var/run/docker.sock"
+      ofelia.job-run.restart-portainer.delete: "true"
 
   portainer:
     image: portainer/portainer-ee:2.39.1-alpine
@@ -79,7 +79,7 @@ services:
       - ../data:/data
       - letsencrypt:/certs:ro
     ports:
-      - '0.0.0.0:9443:9443'
+      - "0.0.0.0:9443:9443"
     command:
       - --tlscert
       - /certs/live/${DOMAIN}/fullchain.pem
