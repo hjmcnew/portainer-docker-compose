@@ -3,11 +3,81 @@ name: portainer
 include:
   - ../portainer-agent/docker-compose.yaml
 services:
+  certbot:
+    image: certbot/dns-route53:5.4.0
+    container_name: certbot
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+    environment:
+      - DOMAIN=${DOMAIN}
+      - EMAIL=${EMAIL}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    command:
+      - -c
+      - |
+        if [ ! -f /etc/letsencrypt/live/${DOMAIN}/fullchain.pem ]; then
+          certbot certonly \
+            --dns-route53 \
+            --non-interactive \
+            --agree-tos \
+            --email ${EMAIL} \
+            -d ${DOMAIN} \
+            --key-type ecdsa
+        fi
+        sleep infinity
+    entrypoint: /bin/sh
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - test -f /etc/letsencrypt/live/${DOMAIN}/fullchain.pem
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 120s
+    labels:
+      ofelia.job-exec.certbot-renew.schedule: '0 23 0 * * 1'
+      ofelia.job-exec.certbot-renew.command: 'certbot renew --deploy-hook "touch /etc/letsencrypt/.renewed"'
+
+  ofelia:
+    image: mcuadros/ofelia:0.3.21
+    container_name: ofelia
+    depends_on:
+      certbot:
+        condition: service_healthy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: daemon --docker
+    restart: unless-stopped
+    labels:
+      ofelia.job-run.restart-portainer.schedule: '0 28 0 * * 1'
+      ofelia.job-run.restart-portainer.image: 'docker:cli'
+      ofelia.job-run.restart-portainer.command: >-
+        sh -c "docker exec certbot test -f /etc/letsencrypt/.renewed
+        && docker restart portainer
+        && docker exec certbot rm /etc/letsencrypt/.renewed
+        || true"
+      ofelia.job-run.restart-portainer.volume: '/var/run/docker.sock:/var/run/docker.sock'
+      ofelia.job-run.restart-portainer.delete: 'true'
+
   portainer:
     image: portainer/portainer-ee:2.39.0-alpine
     container_name: portainer
+    depends_on:
+      certbot:
+        condition: service_healthy
     volumes:
       - ../data:/data
+      - letsencrypt:/certs:ro
     ports:
       - '0.0.0.0:9443:9443'
+    command:
+      - --sslcert
+      - /certs/live/${DOMAIN}/fullchain.pem
+      - --sslkey
+      - /certs/live/${DOMAIN}/privkey.pem
     restart: unless-stopped
+
+volumes:
+  letsencrypt:
