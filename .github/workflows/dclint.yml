@@ -5,8 +5,10 @@ permissions:
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
+    branches: ["main"]
+  workflow_dispatch:
 
 jobs:
   dclint:
@@ -17,4 +19,4 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v6
       - run: npm install dclint
-      - run: npx dclint */docker-compose.yaml
+      - run: npx dclint ./*/docker-compose.yaml
