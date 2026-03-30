@@ -73,9 +73,9 @@ services:
     ports:
       - '0.0.0.0:9443:9443'
     command:
-      - --sslcert
+      - --tlscert
       - /certs/live/${DOMAIN}/fullchain.pem
-      - --sslkey
+      - --tlskey
       - /certs/live/${DOMAIN}/privkey.pem
     restart: unless-stopped
 
