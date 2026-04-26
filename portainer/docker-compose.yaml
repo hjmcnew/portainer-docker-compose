@@ -45,7 +45,7 @@ services:
       ofelia.job-exec.certbot-renew.command: 'certbot renew --deploy-hook "touch /etc/letsencrypt/.renewed"'
 
   portainer:
-    image: portainer/portainer-ee:2.39.1-alpine
+    image: portainer/portainer-ee:2.40.0-alpine
     container_name: portainer
     depends_on:
       certbot:
