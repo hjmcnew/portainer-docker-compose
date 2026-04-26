@@ -7,6 +7,8 @@ services:
     image: certbot/dns-route53:v5.5.0
     container_name: certbot
     volumes:
+      # Cert handoff: certbot writes, portainer reads. Shared by design.
+      # kics-scan ignore-line
       - letsencrypt:/etc/letsencrypt
     environment:
       - DOMAIN=${DOMAIN}
@@ -52,6 +54,8 @@ services:
         condition: service_healthy
     volumes:
       - ../data:/data
+      # Cert handoff: certbot writes, portainer reads. Shared by design.
+      # kics-scan ignore-line
       - letsencrypt:/certs:ro
     ports:
       - "0.0.0.0:9443:9443"
@@ -61,6 +65,22 @@ services:
       - --tlskey
       - /certs/live/${DOMAIN}/privkey.pem
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - -q
+        - --no-check-certificate
+        - --spider
+        - https://localhost:9443/
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
 volumes:
   letsencrypt:
