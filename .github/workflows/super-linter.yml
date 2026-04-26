@@ -1,10 +1,7 @@
 ---
 name: Lint Code Base
 
-permissions:
-  contents: read
-  statuses: write
-  pull-requests: write
+permissions: {}
 
 on:
   push:
@@ -13,17 +10,28 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   run-lint:
+    name: Super-Linter
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # checkout
+      statuses: write # super-linter posts per-language commit statuses
+      pull-requests: write # super-linter posts PR comment summarizing failures
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          persist-credentials: false
+          # Full git history is needed for super-linter to diff changed files
           fetch-depth: 0
 
       - name: Lint Code Base
-        uses: github/super-linter@v7
+        uses: github/super-linter@b807e99ddd37e444d189cfd2c2ca1274d8ae8ef1 # v7
         env:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "main"
