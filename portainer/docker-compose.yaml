@@ -47,6 +47,7 @@ services:
       retries: 30
       start_period: 120s
     labels:
+      ofelia.enabled: 'true'
       ofelia.job-exec.certbot-renew.schedule: '0 23 0 * * 1'
       ofelia.job-exec.certbot-renew.command: >-
         certbot renew --deploy-hook "touch /etc/letsencrypt/.renewed"
