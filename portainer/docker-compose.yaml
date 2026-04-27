@@ -1,4 +1,9 @@
 ---
+# kics-scan disable=8c978947-0ff6-485c-b0c2-0bfca6026466
+# Disabled query (and the reason it's accepted):
+#   8c978947... Shared Volumes Between Containers
+# The `letsencrypt` named volume is the cert handoff between certbot (writer)
+# and portainer (reader). Sharing is the entire design.
 name: portainer
 include:
   - ../portainer-agent/docker-compose.yaml
@@ -7,8 +12,6 @@ services:
     image: certbot/dns-route53:v5.5.0
     container_name: certbot
     volumes:
-      # Cert handoff: certbot writes, portainer reads. Shared by design.
-      # kics-scan ignore-line
       - letsencrypt:/etc/letsencrypt
     environment:
       - DOMAIN=${DOMAIN}
@@ -55,8 +58,6 @@ services:
         condition: service_healthy
     volumes:
       - ../data:/data
-      # Cert handoff: certbot writes, portainer reads. Shared by design.
-      # kics-scan ignore-line
       - letsencrypt:/certs:ro
     ports:
       - "0.0.0.0:9443:9443"
