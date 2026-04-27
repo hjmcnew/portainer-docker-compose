@@ -100,7 +100,7 @@ services:
       - no-new-privileges:true
 
   portainer:
-    image: portainer/portainer-ee:2.39.1-alpine
+    image: portainer/portainer-ee:2.40.0-alpine
     container_name: portainer
     depends_on:
       certbot:
