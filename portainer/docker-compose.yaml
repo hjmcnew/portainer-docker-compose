@@ -33,10 +33,6 @@ services:
         sleep infinity
     entrypoint: /bin/sh
     restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
     healthcheck:
       test:
         - CMD-SHELL
@@ -49,6 +45,10 @@ services:
       ofelia.job-exec.certbot-renew.schedule: "0 23 0 * * 1"
       ofelia.job-exec.certbot-renew.command: >-
         certbot renew --deploy-hook "touch /etc/letsencrypt/.renewed"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
 
   portainer:
     image: portainer/portainer-ee:2.39.1-alpine
@@ -60,17 +60,16 @@ services:
       - ../data:/data
       - letsencrypt:/certs:ro
     ports:
-      - "0.0.0.0:9443:9443"
+      - target: 9443
+        published: 9443
+        host_ip: 0.0.0.0
+        protocol: tcp
     command:
       - --tlscert
       - /certs/live/${DOMAIN}/fullchain.pem
       - --tlskey
       - /certs/live/${DOMAIN}/privkey.pem
     restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
     healthcheck:
       test:
         - CMD
@@ -83,6 +82,10 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
 
 volumes:
   letsencrypt:
