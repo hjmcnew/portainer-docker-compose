@@ -50,6 +50,31 @@ services:
     security_opt:
       - no-new-privileges:true
 
+  ofelia:
+    image: mcuadros/ofelia:0.3.22
+    container_name: ofelia
+    depends_on:
+      certbot:
+        condition: service_healthy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: daemon --docker
+    restart: unless-stopped
+    labels:
+      ofelia.job-run.restart-portainer.schedule: '0 28 0 * * 1'
+      ofelia.job-run.restart-portainer.image: 'docker:cli'
+      ofelia.job-run.restart-portainer.command: >-
+        sh -c "docker exec certbot test -f /etc/letsencrypt/.renewed
+        && docker restart portainer
+        && docker exec certbot rm /etc/letsencrypt/.renewed
+        || true"
+      ofelia.job-run.restart-portainer.volume: '/var/run/docker.sock:/var/run/docker.sock'
+      ofelia.job-run.restart-portainer.delete: 'true'
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
   portainer:
     image: portainer/portainer-ee:2.39.1-alpine
     container_name: portainer
