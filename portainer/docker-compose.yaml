@@ -42,7 +42,7 @@ services:
       retries: 30
       start_period: 120s
     labels:
-      ofelia.job-exec.certbot-renew.schedule: "0 23 0 * * 1"
+      ofelia.job-exec.certbot-renew.schedule: '0 23 0 * * 1'
       ofelia.job-exec.certbot-renew.command: >-
         certbot renew --deploy-hook "touch /etc/letsencrypt/.renewed"
     cap_drop:
@@ -60,7 +60,7 @@ services:
       - ../data:/data
       - letsencrypt:/certs:ro
     ports:
-      - "0.0.0.0:9443:9443"
+      - '0.0.0.0:9443:9443'
     command:
       - --tlscert
       - /certs/live/${DOMAIN}/fullchain.pem
