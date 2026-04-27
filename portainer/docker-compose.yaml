@@ -75,7 +75,10 @@ services:
         - --no-verbose
         - --tries=1
         - --spider
-        - http://localhost:8081/
+        # 127.0.0.1 (not localhost) — busybox wget resolves localhost to
+        # [::1] first, but ofelia binds OFELIA_WEB_ADDRESS=127.0.0.1:8081
+        # (v4 only), so an IPv6 probe gets connection refused.
+        - http://127.0.0.1:8081/
       interval: 10s
       timeout: 3s
       retries: 3
