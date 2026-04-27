@@ -7,6 +7,8 @@ services:
     image: certbot/dns-route53:v5.5.0
     container_name: certbot
     volumes:
+      # Cert handoff: certbot writes, portainer reads. Shared by design.
+      # kics-scan ignore-line
       - letsencrypt:/etc/letsencrypt
     environment:
       - DOMAIN=${DOMAIN}
@@ -42,7 +44,8 @@ services:
       start_period: 120s
     labels:
       ofelia.job-exec.certbot-renew.schedule: "0 23 0 * * 1"
-      ofelia.job-exec.certbot-renew.command: 'certbot renew --deploy-hook "touch /etc/letsencrypt/.renewed"'
+      ofelia.job-exec.certbot-renew.command: >-
+        certbot renew --deploy-hook "touch /etc/letsencrypt/.renewed"
 
   portainer:
     image: portainer/portainer-ee:2.39.1-alpine
@@ -52,6 +55,8 @@ services:
         condition: service_healthy
     volumes:
       - ../data:/data
+      # Cert handoff: certbot writes, portainer reads. Shared by design.
+      # kics-scan ignore-line
       - letsencrypt:/certs:ro
     ports:
       - "0.0.0.0:9443:9443"
@@ -61,6 +66,22 @@ services:
       - --tlskey
       - /certs/live/${DOMAIN}/privkey.pem
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - -q
+        - --no-check-certificate
+        - --spider
+        - https://localhost:9443/
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
 volumes:
   letsencrypt:
