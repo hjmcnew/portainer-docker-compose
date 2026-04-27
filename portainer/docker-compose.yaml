@@ -66,11 +66,7 @@ services:
     environment:
       OFELIA_ENABLE_WEB: 'true'
       OFELIA_WEB_ADDRESS: 127.0.0.1:8081
-    # --docker-events makes ofelia react to container start/stop events from
-    # the docker daemon, which (empirically) is required to pick up
-    # ofelia.job-* labels on containers in sibling compose stacks (e.g. the
-    # forgejo stack's renovate job). Default polling alone wasn't catching it.
-    command: daemon --docker-events
+    command: daemon
     restart: unless-stopped
     healthcheck:
       test:
