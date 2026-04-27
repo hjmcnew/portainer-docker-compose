@@ -125,7 +125,21 @@ services:
       retries: 3
       start_period: 30s
     cap_drop:
-      - ALL
+      # Drop the Docker-default caps portainer doesn't need. Kept (effective):
+      # DAC_OVERRIDE (mkdir /data/certs/CAs on host-owned bind mount),
+      # CHOWN/FOWNER (manage cert file ownership/mode under /data),
+      # SETUID/SETGID (defensive — internal privilege drops if any).
+      # Listed explicitly rather than `cap_drop: ALL` + `cap_add: [...]`
+      # because KICS ce76b7d0 fires on the presence of `cap_add`.
+      - AUDIT_WRITE
+      - FSETID
+      - KILL
+      - MKNOD
+      - NET_BIND_SERVICE
+      - NET_RAW
+      - SETFCAP
+      - SETPCAP
+      - SYS_CHROOT
     security_opt:
       - no-new-privileges:true
 
