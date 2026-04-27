@@ -1,9 +1,14 @@
 ---
-# kics-scan disable=8c978947-0ff6-485c-b0c2-0bfca6026466
-# Disabled query (and the reason it's accepted):
+# kics-scan disable=8c978947-0ff6-485c-b0c2-0bfca6026466,d6355c88-1e8d-49e9-b2f2-f8a1ca12c75b,1c1325ff-831d-43a1-973e-839ae57dfcc0
+# Disabled queries (and the reason each is accepted):
 #   8c978947... Shared Volumes Between Containers
 # The `letsencrypt` named volume is the cert handoff between certbot (writer)
 # and portainer (reader). Sharing is the entire design.
+#   d6355c88... Docker Socket Mounted In Container
+#   1c1325ff... Volume Has Sensitive Host Directory
+# Both fire on ofelia's read-only docker.sock mount. ofelia is a
+# label-driven docker scheduler; reading the socket is its core function
+# and there is no path to ofelia working without it.
 name: portainer
 include:
   - ../portainer-agent/docker-compose.yaml
@@ -45,6 +50,46 @@ services:
       ofelia.job-exec.certbot-renew.schedule: '0 23 0 * * 1'
       ofelia.job-exec.certbot-renew.command: >-
         certbot renew --deploy-hook "touch /etc/letsencrypt/.renewed"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  ofelia:
+    image: ghcr.io/netresearch/ofelia:0.23.1
+    container_name: ofelia
+    depends_on:
+      certbot:
+        condition: service_healthy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      OFELIA_ENABLE_WEB: 'true'
+      OFELIA_WEB_ADDRESS: 127.0.0.1:8081
+    command: daemon
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --no-verbose
+        - --tries=1
+        - --spider
+        - http://localhost:8081/
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+    labels:
+      ofelia.job-run.restart-portainer.schedule: '0 28 0 * * 1'
+      ofelia.job-run.restart-portainer.image: 'docker:cli'
+      ofelia.job-run.restart-portainer.command: >-
+        sh -c "docker exec certbot test -f /etc/letsencrypt/.renewed
+        && docker restart portainer
+        && docker exec certbot rm /etc/letsencrypt/.renewed
+        || true"
+      ofelia.job-run.restart-portainer.volume: '/var/run/docker.sock:/var/run/docker.sock'
+      ofelia.job-run.restart-portainer.delete: 'true'
     cap_drop:
       - ALL
     security_opt:
