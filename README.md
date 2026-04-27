@@ -4,7 +4,7 @@ Docker Compose configurations for deploying [Portainer EE](https://www.portainer
 
 ## Repository Structure
 
-```
+```text
 portainer/             # Portainer EE server with SSL and cert automation
   docker-compose.yaml
   .env.example         # Template for required environment variables
@@ -38,32 +38,32 @@ A standalone Portainer Agent deployment on port `9001`, suitable for adding remo
 
 1. Clone the repository:
 
-    ```sh
-    git clone https://github.com/hjmcnew/portainer-docker-compose.git
-    cd portainer-docker-compose
-    ```
+   ```sh
+   git clone https://github.com/hjmcnew/portainer-docker-compose.git
+   cd portainer-docker-compose
+   ```
 
 2. Create a `.env` file in the `portainer/` directory with your configuration. A template is provided at `portainer/.env.example`:
 
-    ```sh
-    cp portainer/.env.example portainer/.env
-    ```
+   ```sh
+   cp portainer/.env.example portainer/.env
+   ```
 
-    ```env
-    DOMAIN=portainer.example.com
-    EMAIL=you@example.com
-    AWS_ACCESS_KEY_ID=your-key-id
-    AWS_SECRET_ACCESS_KEY=your-secret-key
-    ```
+   ```env
+   DOMAIN=portainer.example.com
+   EMAIL=you@example.com
+   AWS_ACCESS_KEY_ID=your-key-id
+   AWS_SECRET_ACCESS_KEY=your-secret-key
+   ```
 
 3. Start the stack:
 
-    ```sh
-    cd portainer
-    docker compose up -d
-    ```
+   ```sh
+   cd portainer
+   docker compose up -d
+   ```
 
-    Certbot will obtain a certificate on first run. The healthcheck waits for the cert to be issued before Portainer starts.
+   Certbot will obtain a certificate on first run. The healthcheck waits for the cert to be issued before Portainer starts.
 
 4. Access Portainer at `https://your-domain:9443`.
 
