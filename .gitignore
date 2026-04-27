@@ -1,6 +1,11 @@
 .env
 *.env
 !.env.example
+
+# Portainer runtime state (bind-mounted via ../data:/data)
+data/
+
+# dclint installs into the repo root via `npm install dclint` in CI
 node_modules/
 package.json
 package-lock.json

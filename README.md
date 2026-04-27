@@ -7,6 +7,7 @@ Docker Compose configurations for deploying [Portainer EE](https://www.portainer
 ```
 portainer/             # Portainer EE server with SSL and cert automation
   docker-compose.yaml
+  .env.example         # Template for required environment variables
 portainer-agent/       # Standalone Portainer Agent for remote endpoints
   docker-compose.yaml
 ```
@@ -42,7 +43,11 @@ A standalone Portainer Agent deployment on port `9001`, suitable for adding remo
     cd portainer-docker-compose
     ```
 
-2. Create a `.env` file in the `portainer/` directory with your configuration:
+2. Create a `.env` file in the `portainer/` directory with your configuration. A template is provided at `portainer/.env.example`:
+
+    ```sh
+    cp portainer/.env.example portainer/.env
+    ```
 
     ```env
     DOMAIN=portainer.example.com
@@ -82,8 +87,13 @@ No manual intervention is required.
 
 ## CI
 
-- **Docker Compose Lint** — validates compose files on push and PRs using [dclint](https://github.com/zavoloklom/docker-compose-linter)
-- **Dependabot** — monitors for Docker image and GitHub Actions updates weekly (major version bumps are ignored for Docker images)
+GitHub Actions workflows run on push and pull requests to `main`:
+
+- **Docker Compose Lint** — validates compose files using [dclint](https://github.com/zavoloklom/docker-compose-linter)
+- **KICS** — scans infrastructure-as-code for security issues and uploads SARIF results to GitHub code scanning
+- **Super-Linter** — runs [super-linter](https://github.com/super-linter/super-linter) across changed files
+- **zizmor** — audits GitHub Actions workflows with [zizmor](https://github.com/zizmorcore/zizmor)
+- **Renovate** — monitors Docker image and GitHub Actions updates weekly (major version bumps are disabled); see `renovate.json`
 
 ## Contributing
 
