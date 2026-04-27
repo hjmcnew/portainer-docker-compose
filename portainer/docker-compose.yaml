@@ -60,10 +60,7 @@ services:
       - ../data:/data
       - letsencrypt:/certs:ro
     ports:
-      - target: 9443
-        published: 9443
-        host_ip: 0.0.0.0
-        protocol: tcp
+      - "0.0.0.0:9443:9443"
     command:
       - --tlscert
       - /certs/live/${DOMAIN}/fullchain.pem
