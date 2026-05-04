@@ -8,7 +8,7 @@
 name: portainer-agent
 services:
   portainer-agent:
-    image: docker.io/portainer/agent:2.40.0-alpine
+    image: docker.io/portainer/agent:2.41.0-alpine
     container_name: portainer-agent
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
