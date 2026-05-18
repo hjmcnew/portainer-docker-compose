@@ -14,7 +14,7 @@ include:
   - ../portainer-agent/docker-compose.yaml
 services:
   certbot:
-    image: certbot/dns-route53:v5.5.0
+    image: certbot/dns-route53:v5.6.0
     container_name: certbot
     volumes:
       - letsencrypt:/etc/letsencrypt
@@ -57,7 +57,7 @@ services:
       - no-new-privileges:true
 
   ofelia:
-    image: ghcr.io/netresearch/ofelia:0.23.1
+    image: ghcr.io/netresearch/ofelia:0.25.1
     container_name: ofelia
     depends_on:
       certbot:
@@ -100,7 +100,7 @@ services:
       - no-new-privileges:true
 
   portainer:
-    image: portainer/portainer-ee:2.41.0-alpine
+    image: portainer/portainer-ee:2.41.1-alpine
     container_name: portainer
     depends_on:
       certbot:
