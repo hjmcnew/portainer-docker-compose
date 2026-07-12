@@ -17,14 +17,19 @@ services:
       - '0.0.0.0:9001:9001'
     restart: unless-stopped
     healthcheck:
+      # TCP liveness only (not an HTTPS /ping check): busybox wget's https://
+      # probe forks a second process (ssl_client) for the TLS handshake, and
+      # that forked process leaks ~1 thread per probe in the agent's Go TLS
+      # server. Over days this exhausts the host's pids ceiling, after which
+      # nothing in the container can fork -- including the probe's own wget
+      # -- pinning the container "unhealthy" forever. 127.0.0.1 (not
+      # localhost) avoids an IPv6 probe against the agent's IPv4 bind.
       test:
         - CMD
-        - wget
-        - --no-verbose
-        - --tries=1
-        - --no-check-certificate
-        - --spider
-        - https://localhost:9001/ping
+        - nc
+        - -z
+        - 127.0.0.1
+        - '9001'
       interval: 30s
       timeout: 5s
       retries: 3

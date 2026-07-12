@@ -117,13 +117,19 @@ services:
       - /certs/live/${DOMAIN}/privkey.pem
     restart: unless-stopped
     healthcheck:
+      # TCP liveness only (not an HTTPS check): busybox wget's https:// probe
+      # forks a second process (ssl_client) for the TLS handshake, and that
+      # forked process leaks ~1 thread per probe in portainer's Go TLS
+      # server. Over days this exhausts the host's pids ceiling, after which
+      # nothing in the container can fork -- including the probe's own wget
+      # -- pinning the container "unhealthy" forever. 127.0.0.1 (not
+      # localhost) avoids an IPv6 probe against portainer's IPv4 bind.
       test:
         - CMD
-        - wget
-        - -q
-        - --no-check-certificate
-        - --spider
-        - https://localhost:9443/
+        - nc
+        - -z
+        - 127.0.0.1
+        - '9443'
       interval: 30s
       timeout: 5s
       retries: 3
